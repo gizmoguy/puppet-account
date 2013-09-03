@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe 'account' do
+describe 'account::user' do
   describe 'account with default values' do
     let( :title ) { 'user' }
 
@@ -50,6 +50,13 @@ describe 'account' do
         'mode'    => '0700',
       })
     end
+
+    it do
+      should contain_file( "#{title}_sshdir_authorized_keys" ).with({
+        'ensure'  => 'absent',
+        'path'    => "/home/#{title}/.ssh/authorized_keys",
+      })
+    end
   end
 
   describe 'account with custom values' do
@@ -93,7 +100,7 @@ describe 'account' do
       })
     end
 
-    it do 
+    it do
       should contain_file( "#{title}_sshdir" ).with({
         'path' => "#{params[:home_dir]}/.ssh",
         'owner' => params[:username],
@@ -141,6 +148,92 @@ describe 'account' do
 
     it do
       should contain_file( "#{title}_sshdir" ).with({ 'group' => params[:gid] })
+    end
+  end
+
+  describe 'account with authorized_keys' do
+    let( :title ) { 'user' }
+    let( :params ) {{
+      :ssh_keys => [
+          'ssh-rsa AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVV== test1@test',
+          'ssh-rsa 12345678910123456789012345678901234567890123== test2@test',
+      ]
+    }}
+
+    it do
+      should contain_file( "#{title}_sshdir" ).with({
+        'ensure'  => 'directory',
+        'path'    => "/home/#{title}/.ssh",
+        'owner'   => title,
+        'group'   => title,
+        'mode'    => '0700',
+      })
+    end
+
+    it do
+      should contain_file( "#{title}_sshdir_authorized_keys" ).with({
+        'ensure'  => 'present',
+        'path'    => "/home/#{title}/.ssh/authorized_keys",
+        'owner'   => title,
+        'group'   => title,
+        'mode'    => '0600',
+        'require' => "File[#{title}_sshdir]",
+      })
+    end
+  end
+
+  describe 'removed account' do
+    let( :title ) { 'user' }
+    let( :params ) {{
+      :ensure => 'absent',
+      :ssh_keys => [
+          'ssh-rsa AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVV== test1@test',
+          'ssh-rsa 12345678910123456789012345678901234567890123== test2@test',
+      ]
+    }}
+
+    it do
+      should contain_group( title ).with({
+        'ensure' => 'absent',
+        'name'   => title,
+        'gid'    => nil,
+      })
+    end
+
+    it do
+      should contain_user( title ).with({
+        'ensure'     => 'absent',
+        'name'       => title,
+        'uid'        => nil,
+        'password'   => '!',
+        'shell'      => '/bin/bash',
+        'gid'        => title,
+        'groups'     => [],
+        'home'       => "/home/#{title}",
+        'managehome' => true,
+        'system'     => false,
+      })
+    end
+
+    it do
+      should contain_file( "#{title}_home" ).with({
+        'ensure'  => 'absent',
+        'path'    => "/home/#{title}",
+      })
+    end
+
+    it do
+      should contain_file( "#{title}_sshdir" ).with({
+        'ensure'  => 'absent',
+        'path'    => "/home/#{title}/.ssh",
+      })
+    end
+
+    it do
+      should contain_file( "#{title}_sshdir_authorized_keys" ).with({
+        'ensure'  => 'absent',
+        'path'    => "/home/#{title}/.ssh/authorized_keys",
+      })
     end
   end
 end
