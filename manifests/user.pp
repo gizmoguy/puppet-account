@@ -58,7 +58,7 @@
 #   Defaults to false.
 #
 # [*ssh_keys*]
-#   TODO
+#   A list of ssh keys to add to the authorized keys file.
 #
 # [*comment*]
 #   Sets comment metadata for the user
@@ -73,11 +73,16 @@
 #  user { 'sysadmin':
 #    home_dir => '/opt/home/sysadmin',
 #    groups   => [ 'sudo', 'wheel' ],
+#    ssh_keys => [
+#      'ssh-rsa AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVV== test1@test',
+#      'ssh-rsa 12345678910123456789012345678901234567890123== test2@test'
+#    ],
 #  }
 #
 # === Authors
 #
 # Tray Torrance <devwork@warrentorrance.com>
+# Brad Cowie <brad@gizmoguy.net.nz>
 #
 # === Copyright
 #
