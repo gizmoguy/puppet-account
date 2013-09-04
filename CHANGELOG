@@ -1,3 +1,8 @@
+v0.0.5: 2013-09-04
+Changes:
+ - Change structure to support dropping into the foreman
+ - Add support for managing multiple ssh keys
+
 v0.0.4: 2013-07-04
 Changes:
   - Add a 'gid' parameter for use when create_group => false
