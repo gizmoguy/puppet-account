@@ -12,10 +12,6 @@ Currently supports:
   * Support for system users/groups
   * SSH key management (optional)
 
-## Build Status
-
-[![master branch status](https://secure.travis-ci.org/torrancew/puppet-account.png?branch=master)](http://travis-ci.org/torrancew/puppet-account)
-
 ## Documentation
 
 A brief usage summary with examples follows.
