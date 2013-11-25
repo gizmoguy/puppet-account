@@ -1,5 +1,8 @@
 class account(
-  $users = []
+  $users = {}
 ) {
-    create_resources('account::user', $users)
+
+  validate_hash($users)
+  create_resources('account::user', $users)
+
 }
