@@ -26,7 +26,7 @@
 #   Defaults to undef.
 #
 # [*password*]
-#   The password to set for the user.
+#   The initial password to set for the user.
 #   The default is to disable the password.
 #
 # [*shell*]
@@ -155,13 +155,21 @@ define account::user (
       name       => $username,
       comment    => $comment,
       uid        => $uid,
-      password   => $password,
       shell      => $shell,
       gid        => $primary_group,
       groups     => $groups,
       home       => $home_dir_real,
       managehome => $manage_home,
       system     => $system,
+      notify     => Exec["${title}_set_initial_password"]
+  }
+
+  exec {
+    "${title}_set_initial_password":
+      command => "usermod -p '${password}' ${username}",
+      onlyif  => "egrep -q '^${username}:[*!]' /etc/shadow",
+      path    => "/usr/sbin:/usr/bin:/sbin:/bin",
+      require => User[$title];
   }
 
   file {

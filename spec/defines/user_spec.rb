@@ -19,7 +19,6 @@ describe 'account::user' do
         'ensure'     => 'present',
         'name'       => title,
         'uid'        => nil,
-        'password'   => '!',
         'shell'      => '/bin/bash',
         'gid'        => title,
         'groups'     => [],
@@ -28,6 +27,10 @@ describe 'account::user' do
         'system'     => false,
         'before'     => "File[#{title}_home]",
       })
+    end
+
+    it do
+      should contain_exec( "#{title}_set_initial_password" )
     end
 
     it do
@@ -205,7 +208,6 @@ describe 'account::user' do
         'ensure'     => 'absent',
         'name'       => title,
         'uid'        => nil,
-        'password'   => '!',
         'shell'      => '/bin/bash',
         'gid'        => title,
         'groups'     => [],
@@ -213,6 +215,10 @@ describe 'account::user' do
         'managehome' => true,
         'system'     => false,
       })
+    end
+
+    it do
+      should contain_exec( "#{title}_set_initial_password" )
     end
 
     it do
