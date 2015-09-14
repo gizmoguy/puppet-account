@@ -178,21 +178,21 @@ define account::user (
       path    => $home_dir_real,
       owner   => $dir_owner,
       group   => $dir_group,
-      mode    => 0750;
+      mode    => 750;
 
     "${title}_sshdir":
       ensure  => $dir_ensure,
       path    => "${home_dir_real}/.ssh",
       owner   => $dir_owner,
       group   => $dir_group,
-      mode    => 0700;
+      mode    => 700;
 
     "${title}_sshdir_authorized_keys":
       ensure  => $keys_ensure,
       path    => "${home_dir_real}/.ssh/authorized_keys",
       owner   => $dir_owner,
       group   => $dir_group,
-      mode    => 0600,
+      mode    => 600,
       require => File["${title}_sshdir"],
       content => template("account/authorized_keys.erb");
   }

@@ -10,7 +10,7 @@ describe 'account::user' do
         'name'   => title,
         'system' => false,
         'gid'    => nil,
-        'before' => "User[#{title}]",
+        'before' => ["User[#{title}]"],
       })
     end
 
@@ -25,7 +25,7 @@ describe 'account::user' do
         'home'       => "/home/#{title}",
         'managehome' => true,
         'system'     => false,
-        'before'     => "File[#{title}_home]",
+        'before'     => ["File[#{title}_home]"],
       })
     end
 
@@ -39,8 +39,8 @@ describe 'account::user' do
         'path'    => "/home/#{title}",
         'owner'   => title,
         'group'   => title,
-        'mode'    => '0750',
-        'before'  => "File[#{title}_sshdir]",
+        'mode'    => '750',
+        'before'  => ["File[#{title}_sshdir]"],
       })
     end
 
@@ -50,7 +50,7 @@ describe 'account::user' do
         'path'    => "/home/#{title}/.ssh",
         'owner'   => title,
         'group'   => title,
-        'mode'    => '0700',
+        'mode'    => '700',
       })
     end
 
@@ -169,7 +169,7 @@ describe 'account::user' do
         'path'    => "/home/#{title}/.ssh",
         'owner'   => title,
         'group'   => title,
-        'mode'    => '0700',
+        'mode'    => '700',
       })
     end
 
@@ -179,7 +179,7 @@ describe 'account::user' do
         'path'    => "/home/#{title}/.ssh/authorized_keys",
         'owner'   => title,
         'group'   => title,
-        'mode'    => '0600',
+        'mode'    => '600',
         'require' => "File[#{title}_sshdir]",
       })
     end
