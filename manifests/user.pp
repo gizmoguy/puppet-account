@@ -91,7 +91,7 @@
 define account::user (
   $username = $title, $password = '!', $shell = '/bin/bash', $manage_home = true,
   $home_dir = undef, $create_group = true, $system = false, $uid = undef,
-  $ssh_keys = [], $ssh_key_type = 'ssh-rsa', $groups = [], $ensure = present,
+  $ssh_keys = [], $groups = [], $ensure = present,
   $comment= "$title Puppet-managed User", $gid = 'users'
 ) {
 
