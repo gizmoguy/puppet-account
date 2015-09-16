@@ -1,5 +1,0 @@
-<%= ERB.new(File.read(File.expand_path("_header.erb",File.dirname(file)))).result(binding) -%>
-
-<% @ssh_keys.each do |key| -%>
-<%= key %>
-<% end -%>

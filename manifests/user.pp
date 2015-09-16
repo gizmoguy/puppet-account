@@ -60,6 +60,9 @@
 # [*ssh_keys*]
 #   A list of ssh keys to add to the authorized keys file.
 #
+# [*purge_ssh_keys*]
+#  Remove unmanaged ssh keys from the authorized keys file.
+#
 # [*comment*]
 #   Sets comment metadata for the user
 #
@@ -67,6 +70,11 @@
 #   Sets the primary group of this user, if $create_group = false
 #   Defaults to 'users'
 #     WARNING: Has no effect if used with $create_group = true
+#
+# [*allowdupe*]
+#   Whether to allow duplicate UIDs.
+#   Defaults to false.
+#   Valid values are true, false, yes, no.
 #
 # === Examples
 #
@@ -82,22 +90,35 @@
 # === Authors
 #
 # Tray Torrance <devwork@warrentorrance.com>
-# Brad Cowie <brad@gizmoguy.net.nz>
 #
 # === Copyright
 #
 # Copyright 2013 Tray Torrance, unless otherwise noted
 #
+
 define account::user (
-  $username = $title, $password = '!', $shell = '/bin/bash', $manage_home = true,
-  $home_dir = undef, $create_group = true, $system = false, $uid = undef,
-  $ssh_keys = [], $groups = [], $ensure = present,
-  $comment= "$title Puppet-managed User", $gid = 'users'
+  $username = $title, $password = '!', $shell = '/bin/bash',
+  $manage_home = true, $home_dir = undef, $home_dir_perms = '750',
+  $create_group = true, $system = false, $uid = undef,
+  $ssh_keys = [], $purge_ssh_keys = false, $groups = [], $ensure = present,
+  $gid = 'users', $allowdupe = false, $comment= "$title Puppet-managed User"
 ) {
 
   if $home_dir == undef {
-      $home_dir_real = "/home/${username}"
-  } else {
+    if $username == 'root' {
+      case $::operatingsystem {
+        'Solaris': { $home_dir_real = '/' }
+        default:   { $home_dir_real = '/root' }
+      }
+    }
+    else {
+      case $::operatingsystem {
+        'Solaris': { $home_dir_real = "/export/home/${username}" }
+        default:   { $home_dir_real = "/home/${username}" }
+      }
+    }
+  }
+  else {
       $home_dir_real = $home_dir
   }
 
@@ -119,6 +140,7 @@ define account::user (
       absent: {
         User[$title] -> Group[$title]
       }
+      default: {}
     }
   }
   else {
@@ -133,15 +155,15 @@ define account::user (
 
   case $ensure {
     present: {
-      $dir_ensure  = directory
-      $dir_owner   = $username
-      $dir_group   = $primary_group
+      $dir_ensure = directory
+      $dir_owner  = $username
+      $dir_group  = $primary_group
       User[$title] -> File["${title}_home"] -> File["${title}_sshdir"]
     }
     absent: {
-      $dir_ensure  = absent
-      $dir_owner   = undef
-      $dir_group   = undef
+      $dir_ensure = absent
+      $dir_owner  = undef
+      $dir_group  = undef
       File["${title}_sshdir"] -> File["${title}_home"] -> User[$title]
     }
     default: {
@@ -149,19 +171,51 @@ define account::user (
     }
   }
 
-  user {
-    $title:
-      ensure     => $ensure,
-      name       => $username,
-      comment    => $comment,
-      uid        => $uid,
-      shell      => $shell,
-      gid        => $primary_group,
-      groups     => $groups,
-      home       => $home_dir_real,
-      managehome => $manage_home,
-      system     => $system,
-      notify     => Exec["${title}_set_initial_password"]
+  case $::puppetversion {
+    /^3.[012345]/: {
+      $supports_purge_keys = false
+    }
+    /^3.6.[01]/: {
+      $supports_purge_keys = false
+    }
+    default: {
+      $supports_purge_keys = true
+    }
+  }
+
+  if $supports_purge_keys {
+    user {
+      $title:
+        ensure         => $ensure,
+        name           => $username,
+        comment        => $comment,
+        uid            => $uid,
+        shell          => $shell,
+        gid            => $primary_group,
+        groups         => $groups,
+        home           => $home_dir_real,
+        managehome     => $manage_home,
+        system         => $system,
+        allowdupe      => $allowdupe,
+        purge_ssh_keys => $purge_ssh_keys,
+        notify         => Exec["${title}_set_initial_password"]
+    }
+  } else {
+    user {
+      $title:
+        ensure         => $ensure,
+        name           => $username,
+        comment        => $comment,
+        uid            => $uid,
+        shell          => $shell,
+        gid            => $primary_group,
+        groups         => $groups,
+        home           => $home_dir_real,
+        managehome     => $manage_home,
+        system         => $system,
+        allowdupe      => $allowdupe,
+        notify         => Exec["${title}_set_initial_password"]
+    }
   }
 
   exec {
@@ -178,7 +232,7 @@ define account::user (
       path    => $home_dir_real,
       owner   => $dir_owner,
       group   => $dir_group,
-      mode    => 750;
+      mode    => $home_dir_perms;
 
     "${title}_sshdir":
       ensure  => $dir_ensure,
@@ -194,6 +248,10 @@ define account::user (
       group   => $dir_group,
       mode    => 600,
       require => File["${title}_sshdir"],
-      content => template("account/authorized_keys.erb");
+  }
+
+  account::ssh_key { $ssh_keys:
+      ensure => $keys_ensure,
+      user   => $username
   }
 }

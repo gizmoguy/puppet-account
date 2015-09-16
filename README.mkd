@@ -31,7 +31,7 @@ To use this module, one would define a nested hash of user resources in YAML:
       users:
         sysadmin:
           home_dir: /opt/sysadmin
-          ssh_key:
+          ssh_keys:
             - ssh-rsa AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVV== test1@test
             - ssh-rsa 12345678910123456789012345678901234567890123== test2@test
           groups:
@@ -50,7 +50,9 @@ Please use the github issues functionality to report any bugs or requests for ne
 
 Feel free to fork and submit pull requests (or use git's own functionality to mail me patches) for potential contributions.
 
-## Contributors
-  * Tray Torrance    (torrancew) - Author
-  * Facundo Guerrero (guerremdq) - Support for 'comment' parameter
-  * Brad Cowie       (gizmoguy)
+## ToDo
+
+  - <del>Unit Tests</del>
+  - <del>Submit module to PuppetForge</del>
+  - <del>Support for removing accounts</del>
+

@@ -16,16 +16,18 @@ describe 'account::user' do
 
     it do
       should contain_user( title ).with({
-        'ensure'     => 'present',
-        'name'       => title,
-        'uid'        => nil,
-        'shell'      => '/bin/bash',
-        'gid'        => title,
-        'groups'     => [],
-        'home'       => "/home/#{title}",
-        'managehome' => true,
-        'system'     => false,
-        'before'     => ["File[#{title}_home]"],
+        'ensure'         => 'present',
+        'name'           => title,
+        'uid'            => nil,
+        'shell'          => '/bin/bash',
+        'gid'            => title,
+        'groups'         => [],
+        'home'           => "/home/#{title}",
+        'managehome'     => true,
+        'system'         => false,
+        'allowdupe'      => false,
+        'purge_ssh_keys' => false,
+        'before'         => ["File[#{title}_home]"],
       })
     end
 
@@ -65,13 +67,16 @@ describe 'account::user' do
   describe 'account with custom values' do
     let( :title ) { 'admin' }
     let( :params ) {{
-      :username    => 'sysadmin',
-      :shell       => '/bin/zsh',
-      :manage_home => false,
-      :home_dir    => '/opt/admin',
-      :system      => true,
-      :uid         => 777,
-      :groups      => [ 'sudo', 'users' ],
+      :username       => 'sysadmin',
+      :shell          => '/bin/zsh',
+      :manage_home    => false,
+      :home_dir       => '/opt/admin',
+      :home_dir_perms => '0700',
+      :system         => true,
+      :uid            => 777,
+      :allowdupe      => true,
+      :purge_ssh_keys => true,
+      :groups         => [ 'sudo', 'users' ],
     }}
 
     it do
@@ -84,14 +89,16 @@ describe 'account::user' do
 
     it do
       should contain_user( title ).with({
-        'name'        => params[:username],
-        'uid'         => params[:uid],
-        'shell'       => params[:shell],
-        'gid'         => params[:username],
-        'groups'      => params[:groups],
-        'home'        => params[:home_dir],
-        'manage_home' => params[:manage_home] == false ? nil : true,
-        'system'      => params[:system],
+        'name'           => params[:username],
+        'uid'            => params[:uid],
+        'shell'          => params[:shell],
+        'gid'            => params[:username],
+        'groups'         => params[:groups],
+        'home'           => params[:home_dir],
+        'manage_home'    => params[:manage_home] == false ? nil : true,
+        'system'         => params[:system],
+        'allowdupe'      => params[:allowdupe],
+        'purge_ssh_keys' => params[:purge_ssh_keys],
       })
     end
 
@@ -100,6 +107,7 @@ describe 'account::user' do
         'path'  => params[:home_dir],
         'owner' => params[:username],
         'group' => params[:username],
+        'mode'  => params[:home_dir_perms],
       })
     end
 
@@ -174,6 +182,26 @@ describe 'account::user' do
     end
 
     it do
+      should contain_ssh_authorized_key( "#{title}_ssh_key_test1@test" ).with({
+        'ensure' => 'present',
+        'user'   => 'user',
+        'name'   => 'test1@test',
+        'type'   => 'ssh-rsa',
+        'key'    => 'AABBCCDDEEFFGGHHIIJJKKLLMMNNOOPPQQRRSSTTUUVV=='
+      })
+    end
+
+    it do
+      should contain_ssh_authorized_key( "#{title}_ssh_key_test2@test" ).with({
+        'ensure' => 'present',
+        'user'   => 'user',
+        'name'   => 'test2@test',
+        'type'   => 'ssh-rsa',
+        'key'    => '12345678910123456789012345678901234567890123=='
+      })
+    end
+
+    it do
       should contain_file( "#{title}_sshdir_authorized_keys" ).with({
         'ensure'  => 'present',
         'path'    => "/home/#{title}/.ssh/authorized_keys",
@@ -182,6 +210,21 @@ describe 'account::user' do
         'mode'    => '600',
         'require' => "File[#{title}_sshdir]",
       })
+    end
+  end
+
+  describe 'account with malformed ssh key' do
+    let( :title ) { 'user' }
+    let( :params ) {{
+      :ssh_keys => [
+          'blah',
+      ]
+    }}
+
+    it do
+      expect {
+        should contain_ssh_authorized_key( "#{title}_ssh_key_" )
+      }.to raise_error(Puppet::Error, /malformed/)
     end
   end
 
