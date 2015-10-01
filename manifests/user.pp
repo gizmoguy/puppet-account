@@ -179,7 +179,7 @@ define account::user (
       $supports_purge_keys = false
     }
     default: {
-      $supports_purge_keys = true
+      $supports_purge_keys = false
     }
   }
 
