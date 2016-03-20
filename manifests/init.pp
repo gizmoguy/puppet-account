@@ -1,7 +1,8 @@
 class account(
   $users = {},
   $usergroups = {},
-  $groups = {}
+  $groups = {},
+  $stage = 'main'
 ) {
 
   validate_hash($users)
